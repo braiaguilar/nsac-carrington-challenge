@@ -7,6 +7,8 @@ os.environ['CDF_LIB'] = 'C:/Program Files/CDF_Distribution/cdf38_1-dist/lib'
 
 #! parametrizar variables de directorios por variables de entorno
 
+# function to get single date data
+
 
 def get_data(year, month, day, dataset):
     if (year != '2022'):
@@ -51,8 +53,21 @@ def get_data(year, month, day, dataset):
             output_file.write(r.content)
 
     cdf_pycdf = pycdf.CDF('./assets/' + assetFolder + '/' + filename)
+    return cdf_pycdf
 
-    print(cdf_pycdf)
+
+# function to get data from a date array
 
 
-get_data('2022', '09', '11', 'wind')
+def data_iterator(dates, dataset):
+    # year, month, day
+    data = []
+    for i in range(len(dates)):
+        year = dates[i][0:4]
+        month = dates[i][5:7]
+        day = dates[i][8:10]
+        data.append(get_data(year, month, day, dataset))
+
+    print(data)
+
+data_iterator(['2022-01-01', '2022-01-02'], 'dscovr')
