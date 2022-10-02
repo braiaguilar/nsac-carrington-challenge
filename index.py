@@ -1,4 +1,5 @@
 # imports
+from calendar import EPOCH
 from spacepy import pycdf
 from dtw import *
 import numpy as np
@@ -8,9 +9,15 @@ import datetime
 import os
 os.environ['CDF_LIB'] = 'C:/Program Files/CDF_Distribution/cdf38_1-dist/lib'
 
-#! parametrizar variables de directorios por variables de entorno
-
 # function to get single date data
+
+# epoch = tiempo. Formato: 2021-01-01T00:00:00.000Z
+# bx = campo magnético en x (nT)
+# by = campo magnético en y (nT)
+# bz = campo magnético en z (nT)
+# sx = campo elíptico en x (nT)
+# sy = campo elíptico en y (nT)
+# sz = campo elíptico en z (nT)
 
 
 def get_data(year, month, day, dataset):
@@ -58,35 +65,42 @@ def get_data(year, month, day, dataset):
     cdf_pycdf = pycdf.CDF('./assets/' + assetFolder + '/' + filename)
 
     for key in cdf_pycdf.keys():
-        if key == 'Epoch1':
-            # if dataset == 'wind' and key == 'Epoch1':
+        if dataset == 'wind' and key == 'Epoch1':
             epoch = []
             iterate = cdf_pycdf[key][...]
             for i in range(10):
-                date = datetime.datetime.fromtimestamp(iterate[i]).strftime('%S')
-                date *= 1000
-                epoch.append(date)
+                epoch.append(iterate[i][0])
+        elif key == 'Epoch1':
+            epoch = []
+            iterate = cdf_pycdf[key][...]
+            for i in range(10):
+                epoch.append(iterate[i])
         if key == 'BGSE' or key == 'B1GSE':
-            bx = []
+            sx = []
+            sy = []
+            sz = []
             iterate = cdf_pycdf[key][...]
             for i in range(10):
-                bx.append(iterate[i])
+                sx.append(iterate[i][0])
+                sy.append(iterate[i][1])
+                sz.append(iterate[i][2])
         if key == 'BGSM' or key == 'B1SDGSE':
+            bx = []
             by = []
+            bz = []
             iterate = cdf_pycdf[key][...]
             for i in range(10):
-                by.append(iterate[i])
+                bx.append(iterate[i][0])
+                by.append(iterate[i][1])
+                bz.append(iterate[i][2])
 
     return {'epoch': epoch, 'bx': bx, 'by': by}
 
-# df = get_data('2022', '01', '01', 'dscovr')
-# print(df)
 
 # function to get data from a date array
 
 
 def data_iterator(dates, dataset):
-    # year, month, day
     data = []
     for i in range(len(dates)):
         year = dates[i][0:4]
@@ -96,12 +110,12 @@ def data_iterator(dates, dataset):
 
     return data
 
-
-query = data_iterator(['2022-01-01', '2022-01-02'], 'dscovr')
-template = data_iterator(['2022-01-01', '2022-01-02'], 'wind')
+# query = data_iterator(['2022-01-01', '2022-01-02'], 'dscovr')
+# template = data_iterator(['2022-01-01', '2022-01-02'], 'wind')
 
 # for i in query:
 #     print(i['epoch'])
+
 
 # with open('persons.csv', 'wb') as csvfile:
 #     filewriter = csv.writer(csvfile, delimiter=',',
@@ -109,19 +123,20 @@ template = data_iterator(['2022-01-01', '2022-01-02'], 'wind')
 #     for i in query:
 #         filewriter.writerow(['Epoch', i['epoch']])
 #         filewriter.writerow(['BX', i['bx']])
-#         filewriter.writerow(['BY', i['by']])
+#         filewriter.writerow(['BY', i['by']]))
+# date_array = ['2022-01-01', '2022-01-02']
 
-query = get_data('2022', '01', '01', 'dscovr')['epoch']
-template = get_data('2022', '01', '01', 'wind')['epoch']
-query = np.array(query)
-template = np.array(template)
+
+# query = get_data('2022', '01', '01', 'dscovr')['epoch']
+# template = get_data('2022', '01', '01', 'wind')['epoch']
+
+
+# query = np.array(query)
+# template = np.array(template)
+# timedate = datetime.datetime(2022, 1, 1, 0, 0).timestamp()
 # Find the best match with the canonical recursion formula
-alignment = dtw(query, template, keep_internals=True)
-print(template)
-
-# Display the warping curve, i.e. the alignment curve
-# alignment.plot(type="threeway")
-
+# alignment = dtw(int(timedate), int(timedate), keep_internals=True)
+# print(alignment)
 
 # Align and plot with the Rabiner-Juang type VI-c unsmoothed recursion
 # dtw(query, template, keep_internals=True,

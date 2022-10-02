@@ -132,3 +132,6 @@ dmypy.json
 assets/dscovrMFI/*
 assets/windMFI/*
 assets/windION/*
+
+canvas.py
+test.py
