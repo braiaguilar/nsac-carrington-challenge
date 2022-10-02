@@ -64,39 +64,58 @@ def get_data(year, month, day, dataset):
 
     cdf_pycdf = pycdf.CDF('./assets/' + assetFolder + '/' + filename)
 
+    dens = []
+    vel = []
+    temp = []
+
     for key in cdf_pycdf.keys():
-        if dataset == 'wind' and key == 'Epoch1':
-            epoch = []
-            iterate = cdf_pycdf[key][...]
-            for i in range(10):
-                epoch.append(iterate[i][0])
-        elif key == 'Epoch1':
-            epoch = []
-            iterate = cdf_pycdf[key][...]
-            for i in range(10):
-                epoch.append(iterate[i])
-        if key == 'BGSE' or key == 'B1GSE':
-            sx = []
-            sy = []
-            sz = []
-            iterate = cdf_pycdf[key][...]
-            for i in range(10):
-                sx.append(iterate[i][0])
-                sy.append(iterate[i][1])
-                sz.append(iterate[i][2])
-        if key == 'BGSM' or key == 'B1SDGSE':
-            bx = []
-            by = []
-            bz = []
-            iterate = cdf_pycdf[key][...]
-            for i in range(10):
-                bx.append(iterate[i][0])
-                by.append(iterate[i][1])
-                bz.append(iterate[i][2])
+        if dataset == 'dscovr' or dataset == 'wind':
+            if dataset == 'wind' and key == 'Epoch1':
+                epoch = []
+                iterate = cdf_pycdf[key][...]
+                for i in range(10):
+                    epoch.append(iterate[i][0])
+            elif key == 'Epoch1':
+                epoch = []
+                iterate = cdf_pycdf[key][...]
+                for i in range(10):
+                    epoch.append(iterate[i])
+            if key == 'BGSE' or key == 'B1GSE':
+                sx = []
+                sy = []
+                sz = []
+                iterate = cdf_pycdf[key][...]
+                for i in range(10):
+                    sx.append(iterate[i][0])
+                    sy.append(iterate[i][1])
+                    sz.append(iterate[i][2])
+            if key == 'BGSM' or key == 'B1SDGSE':
+                bx = []
+                by = []
+                bz = []
+                iterate = cdf_pycdf[key][...]
+                for i in range(10):
+                    bx.append(iterate[i][0])
+                    by.append(iterate[i][1])
+                    bz.append(iterate[i][2])
+            return {'epoch': epoch, 'bx': bx, 'by': by}
+        else:
+            if key == 'Proton_Np_moment':  # density
+                dens.append(cdf_pycdf[key][...])
+                print(dens)
+            if key == 'Proton_V_moment':  # velocity
+                vel.append(cdf_pycdf[key][...])
+                print(vel)
+            if key == 'Proton_W_moment':  # temperature}
+                temp.append(cdf_pycdf[key][...])
+                print(temp)
 
-    return {'epoch': epoch, 'bx': bx, 'by': by}
+            # return dens vel and temp as a list of lists
+    return {'dens': dens[0], 'vel': vel[0], 'temp': temp[0]}
 
 
+test = get_data('2022', '01', '01', 'wION')
+print(test)
 # function to get data from a date array
 
 
@@ -110,8 +129,13 @@ def data_iterator(dates, dataset):
 
     return data
 
-# query = data_iterator(['2022-01-01', '2022-01-02'], 'dscovr')
-# template = data_iterator(['2022-01-01', '2022-01-02'], 'wind')
+
+# dataset_dates = ['2022-01-01', '2022-01-02', '2022-01-02', '2022-01-03', '2022-01-03', '2022-01-04', '2022-01-04', '2022-01-05', '2022-01-05', '2022-01-06', '2022-01-06', '2022-01-07', '2022-01-07', '2022-01-08', '2022-01-08', '2022-01-09', '2022-01-09', '2022-01-10', '2022-01-10', '2022-01-11', '2022-01-11', '2022-01-12', '2022-01-12', '2022-01-13', '2022-01-13', '2022-01-14', '2022-01-14', '2022-01-15', '2022-01-15',
+#                  '2022-01-16', '2022-01-16', '2022-01-17', '2022-01-17', '2022-01-18', '2022-01-18', '2022-01-19', '2022-01-19', '2022-01-20', '2022-01-20', '2022-01-21', '2022-01-21', '2022-01-22', '2022-01-22', '2022-01-23', '2022-01-23', '2022-01-24', '2022-01-24', '2022-01-25', '2022-01-25', '2022-01-26', '2022-01-26', '2022-01-27', '2022-01-27', '2022-01-28', '2022-01-28', '2022-01-29', '2022-01-29', '2022-01-30', '2022-01-30', '2022-01-31']
+
+# dscovrMFI_data = data_iterator(dataset_dates, 'dscovr')
+# windMFI_data = data_iterator(dataset_dates, 'wind')
+# windION_data = data_iterator(dataset_dates, 'wION')
 
 # for i in query:
 #     print(i['epoch'])
