@@ -1,7 +1,10 @@
 # imports
 from spacepy import pycdf
+from dtw import *
+import numpy as np
 import pandas as pd
 import requests
+import datetime
 import os
 os.environ['CDF_LIB'] = 'C:/Program Files/CDF_Distribution/cdf38_1-dist/lib'
 
@@ -53,8 +56,31 @@ def get_data(year, month, day, dataset):
             output_file.write(r.content)
 
     cdf_pycdf = pycdf.CDF('./assets/' + assetFolder + '/' + filename)
-    return cdf_pycdf
 
+    for key in cdf_pycdf.keys():
+        if key == 'Epoch1':
+            # if dataset == 'wind' and key == 'Epoch1':
+            epoch = []
+            iterate = cdf_pycdf[key][...]
+            for i in range(10):
+                date = datetime.datetime.fromtimestamp(iterate[i]).strftime('%S')
+                date *= 1000
+                epoch.append(date)
+        if key == 'BGSE' or key == 'B1GSE':
+            bx = []
+            iterate = cdf_pycdf[key][...]
+            for i in range(10):
+                bx.append(iterate[i])
+        if key == 'BGSM' or key == 'B1SDGSE':
+            by = []
+            iterate = cdf_pycdf[key][...]
+            for i in range(10):
+                by.append(iterate[i])
+
+    return {'epoch': epoch, 'bx': bx, 'by': by}
+
+# df = get_data('2022', '01', '01', 'dscovr')
+# print(df)
 
 # function to get data from a date array
 
@@ -68,6 +94,40 @@ def data_iterator(dates, dataset):
         day = dates[i][8:10]
         data.append(get_data(year, month, day, dataset))
 
-    print(data)
+    return data
 
-data_iterator(['2022-01-01', '2022-01-02'], 'dscovr')
+
+query = data_iterator(['2022-01-01', '2022-01-02'], 'dscovr')
+template = data_iterator(['2022-01-01', '2022-01-02'], 'wind')
+
+# for i in query:
+#     print(i['epoch'])
+
+# with open('persons.csv', 'wb') as csvfile:
+#     filewriter = csv.writer(csvfile, delimiter=',',
+#                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
+#     for i in query:
+#         filewriter.writerow(['Epoch', i['epoch']])
+#         filewriter.writerow(['BX', i['bx']])
+#         filewriter.writerow(['BY', i['by']])
+
+query = get_data('2022', '01', '01', 'dscovr')['epoch']
+template = get_data('2022', '01', '01', 'wind')['epoch']
+query = np.array(query)
+template = np.array(template)
+# Find the best match with the canonical recursion formula
+alignment = dtw(query, template, keep_internals=True)
+print(template)
+
+# Display the warping curve, i.e. the alignment curve
+# alignment.plot(type="threeway")
+
+
+# Align and plot with the Rabiner-Juang type VI-c unsmoothed recursion
+# dtw(query, template, keep_internals=True,
+#     step_pattern=rabinerJuangStepPattern(6, "c"))\
+#     .plot(type="twoway", offset=-2)
+
+# See the recursion relation, as formula and diagram
+# print(rabinerJuangStepPattern(6, "c"))
+# rabinerJuangStepPattern(6, "c").plot()
